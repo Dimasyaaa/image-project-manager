@@ -10,7 +10,5 @@ class Image(Base):
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)  
     created_at = Column(DateTime, default=func.now())
-
     project = relationship("Project", back_populates="images")
-    # Связь: у изображения много аннотаций
     annotations = relationship("Annotation", back_populates="image", cascade="all, delete-orphan")

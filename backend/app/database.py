@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 # URL базы данных берётся из переменных окружения
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg://postgres:postgres@db:5432/image_manager"
+    "postgresql+psycopg://postgres:1234@localhost:5432/image_manager"
 )
 
 # Создаём движок SQLAlchemy

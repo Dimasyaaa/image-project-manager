@@ -8,7 +8,7 @@ class Annotation(Base):
     id = Column(Integer, primary_key=True, index=True)
     image_id = Column(Integer, ForeignKey("images.id"), nullable=False)
     class_name = Column(String, nullable=False)
-    # Храним координаты в процентах (как на фронте)
+    
     x = Column(Float, nullable=False)
     y = Column(Float, nullable=False)
     width = Column(Float, nullable=False)

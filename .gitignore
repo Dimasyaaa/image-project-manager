@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python virtual env
+venv/
+.venv/
+
+# Database files (для разработки)
+*.db
+*.sqlite3
