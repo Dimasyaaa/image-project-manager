@@ -1,163 +1,72 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  Link,
-  useParams,
-} from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { api } from '../api'
 
-import {
-  getProjectById,
-  updateProject,
-} from '../storage/projectsStorage'
-
-function ProjectPage() {
+export default function ProjectPage() {
   const { id } = useParams()
-
-  const fileInputRef = useRef()
-
-  const [project, setProject] = useState(null)
+  const fileInputRef = useRef(null)
+  const [images, setImages] = useState([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const foundProject =
-      getProjectById(id)
-
-    setProject(foundProject)
+    api.getImages(id).then(setImages).catch(err => console.error(err))
   }, [id])
 
-  function processFiles(files) {
-    const imagePromises = Array.from(files).map(
-      (file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader()
-
-          reader.onload = () => {
-            resolve({
-              id:
-                Date.now(),
-              name: file.name,
-              url: reader.result,
-            })
-          }
-
-          reader.readAsDataURL(file)
-        })
-      }
-    )
-
-    Promise.all(imagePromises).then(
-      (images) => {
-        const updatedProject = {
-          ...project,
-          images: [
-            ...project.images,
-            ...images,
-          ],
-        }
-
-        setProject(updatedProject)
-
-        updateProject(updatedProject)
-      }
-    )
+  function handleUpload(e) {
+    const files = Array.from(e.target.files)
+    if (files.length) processFiles(files)
   }
 
-  function handleUpload(event) {
-    processFiles(event.target.files)
+  function handleDrop(e) {
+    e.preventDefault()
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length) processFiles(files)
   }
 
-  function handleDrop(event) {
-    event.preventDefault()
-
-    processFiles(event.dataTransfer.files)
-  }
-
-  function deleteImage(imageId) {
-    const updatedProject = {
-      ...project,
-      images: project.images.filter(
-        (image) =>
-          image.id !== imageId
-      ),
+  async function processFiles(files) {
+    setLoading(true)
+    try {
+      const uploaded = await api.uploadImages(id, files)
+      setImages(prev => [...prev, ...uploaded])
+    } catch (err) {
+      alert('Ошибка загрузки: ' + err.message)
+    } finally {
+      setLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
-
-    setProject(updatedProject)
-
-    updateProject(updatedProject)
   }
 
-  if (!project) {
-    return <h1>Project not found</h1>
+  async function deleteImage(imageId) {
+    if (!confirm('Удалить изображение?')) return
+    try {
+      await api.deleteImage(imageId)
+      setImages(prev => prev.filter(img => img.id !== imageId))
+    } catch (err) {
+      alert('Ошибка: ' + err.message)
+    }
   }
 
   return (
     <div className="container">
-      <Link to="/">
-        Назад
-      </Link>
-
-      <h1 className="page-title">
-        {project.title}
-      </h1>
-
-      <div
-        className="dropzone"
-        onDragOver={(e) =>
-          e.preventDefault()
-        }
-        onDrop={handleDrop}
-        onClick={() =>
-          fileInputRef.current.click()
-        }
-      >
-        <p>
-          Перетащите изображения сюда или нажмите
-          для загрузки
-        </p>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*"
-          hidden
-          onChange={handleUpload}
-        />
+      <Link to="/">Назад</Link>
+      <h1 className="page-title">Проект #{id}</h1>
+      <div className="dropzone" onDragOver={e => e.preventDefault()} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()}>
+        <p>Перетащите изображения сюда или нажмите</p>
+        <input ref={fileInputRef} type="file" multiple accept="image/*" hidden onChange={handleUpload} />
       </div>
-
       <div className="images-grid">
-        {project.images.map((image) => (
-          <div
-            key={image.id}
-            className="image-card"
-          >
-            <img
-              src={image.url}
-              alt={image.name}
-            />
-
+        {images.map(img => (
+          <div key={img.id} className="image-card">
+            <img src={img.url} alt={img.name} />
             <div className="image-content">
-              <p>{image.name}</p>
-              <Link
-                    to={`/image/${project.id}/${image.id}`}
-              >
-              <button className="button">
-                Открыть
-              </button>
-              </Link>
-
-              <button
-                className="button button-danger"
-                onClick={() =>
-                  deleteImage(image.id)
-                }
-              >
-                Удалить
-              </button>
+              <p>{img.name}</p>
+              <Link to={`/image/${id}/${img.id}`}><button className="button">Открыть</button></Link>
+              <button className="button button-danger" onClick={() => deleteImage(img.id)}>Удалить</button>
             </div>
           </div>
         ))}
       </div>
+      {loading && <p style={{textAlign:'center', marginTop:10}}>Загрузка...</p>}
     </div>
   )
 }
-
-export default ProjectPage

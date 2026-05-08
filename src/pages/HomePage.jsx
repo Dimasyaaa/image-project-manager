@@ -1,101 +1,56 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { api } from '../api'
 
-import {
-  getProjects,
-  saveProjects,
-} from '../storage/projectsStorage'
-
-function HomePage() {
+export default function HomePage() {
   const [projects, setProjects] = useState([])
   const [title, setTitle] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    setProjects(getProjects())
+    api.getProjects().then(setProjects).catch(err => console.error(err))
   }, [])
 
-  function createProject() {
+  async function createProject() {
     if (!title.trim()) return
-
-    const newProject = {
-      id: Date.now(),
-      title,
-      images: [],
+    setLoading(true)
+    try {
+      const newProject = await api.createProject(title)
+      setProjects(prev => [...prev, newProject])
+      setTitle('')
+    } catch (err) {
+      alert('Ошибка: ' + err.message)
+    } finally {
+      setLoading(false)
     }
-
-    const updatedProjects = [...projects, newProject]
-
-    setProjects(updatedProjects)
-
-    saveProjects(updatedProjects)
-
-    setTitle('')
   }
 
-  function deleteProject(id) {
-    const updatedProjects = projects.filter(
-      (project) => project.id !== id
-    )
-
-    setProjects(updatedProjects)
-
-    saveProjects(updatedProjects)
+  async function deleteProject(id) {
+    if (!confirm('Удалить проект и все изображения?')) return
+    try {
+      await api.deleteProject(id)
+      setProjects(prev => prev.filter(p => p.id !== id))
+    } catch (err) {
+      alert('Ошибка: ' + err.message)
+    }
   }
 
   return (
     <div className="container">
-    <h1 className="page-title">Проекты</h1>   
-
+      <h1 className="page-title">Проекты</h1>
       <div className="form-group">
-        <input
-          className="input"
-          type="text"
-          placeholder="Название проекта"
-          value={title}
-          onChange={(e) =>
-            setTitle(e.target.value)
-          }
-        />
-
-        <button
-          className="button"
-          onClick={createProject}
-        >
-          Создать проект
-        </button>
+        <input className="input" type="text" placeholder="Название проекта" value={title} onChange={e => setTitle(e.target.value)} />
+        <button className="button" onClick={createProject} disabled={loading}>{loading ? 'Создание...' : 'Создать проект'}</button>
       </div>
-
       <div className="projects-grid">
-        {projects.map((project) => (
-          <div
-            key={project.id}
-            className="project-card"
-          >
-            <h2>
-              <Link
-                to={`/project/${project.id}`}
-              >
-                {project.title}
-              </Link>
-            </h2>
-
-            <p>
-              Изображения: {project.images.length}
-            </p>
-
-            <button
-              className="button button-danger"
-              onClick={() =>
-                deleteProject(project.id)
-              }
-            >
-              Удалить
-            </button>
+        {projects.map(p => (
+          <div key={p.id} className="project-card">
+            <h2><Link to={`/project/${p.id}`}>{p.title}</Link></h2>
+            <p>Изображений: {p.images?.length || 0}</p>
+            <button className="button button-danger" onClick={() => deleteProject(p.id)}>Удалить</button>
           </div>
         ))}
       </div>
     </div>
   )
 }
-
-export default HomePage
