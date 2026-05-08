@@ -48,25 +48,49 @@ export default function ProjectPage() {
 
   return (
     <div className="container">
-      <Link to="/">Назад</Link>
-      <h1 className="page-title">Проект #{id}</h1>
-      <div className="dropzone" onDragOver={e => e.preventDefault()} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()}>
-        <p>Перетащите изображения сюда или нажмите</p>
-        <input ref={fileInputRef} type="file" multiple accept="image/*" hidden onChange={handleUpload} />
+      <div className="section-header">
+        <div>
+          <Link to="/" style={{color: 'var(--gold)', textDecoration: 'none'}}>← Назад</Link>
+          <h1 className="section-title" style={{marginTop: '10px'}}>Проект #{id}</h1>
+        </div>
       </div>
+
+      <div 
+        className="dropzone" 
+        onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('dragover'); }}
+        onDragLeave={e => e.currentTarget.classList.remove('dragover')}
+        onDrop={e => { e.preventDefault(); e.currentTarget.classList.remove('dragover'); handleDrop(e); }}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <p> Перетащите изображения сюда или нажмите для загрузки</p>
+        <input 
+          ref={fileInputRef} 
+          type="file" 
+          multiple 
+          accept="image/*" 
+          hidden 
+          onChange={handleUpload} 
+        />
+      </div>
+
       <div className="images-grid">
         {images.map(img => (
           <div key={img.id} className="image-card">
             <img src={img.url} alt={img.name} />
             <div className="image-content">
               <p>{img.name}</p>
-              <Link to={`/image/${id}/${img.id}`}><button className="button">Открыть</button></Link>
-              <button className="button button-danger" onClick={() => deleteImage(img.id)}>Удалить</button>
+              <Link to={`/image/${id}/${img.id}`}>
+                <button className="button button-outline">Открыть</button>
+              </Link>
+              <button className="button button-danger" onClick={() => deleteImage(img.id)}>
+                Удалить
+              </button>
             </div>
           </div>
         ))}
       </div>
-      {loading && <p style={{textAlign:'center', marginTop:10}}>Загрузка...</p>}
+
+      {loading && <p className="text-center text-gold mt-16">Загрузка...</p>}
     </div>
   )
 }

@@ -102,40 +102,74 @@ export default function ImagePage() {
     return map
   }, [annotations, image?.url])
 
-  if (!image) return <div className="container"><p>Загрузка...</p></div>
+  if (!image) return <div className="container"><p className="text-center">Загрузка...</p></div>
 
   return (
     <div className="container">
-      <Link to={`/project/${projectId}`}>Назад</Link>
-      <h1 className="page-title">{image.name}</h1>
-      <div className="zoom-controls" style={{marginBottom:10, display:'flex', gap:8, alignItems:'center'}}>
-        <button className="button" onClick={() => setZoom(z => Math.max(0.1, z - 0.1))}>−</button>
-        <span style={{minWidth:40, textAlign:'center'}}>{Math.round(zoom * 100)}%</span>
-        <button className="button" onClick={() => setZoom(z => Math.min(5, z + 0.1))}>+</button>
-        <button className="button" onClick={() => setZoom(1)}>Сброс</button>
+      <div className="section-header">
+        <div>
+          <Link to={`/project/${projectId}`} style={{color: 'var(--gold)', textDecoration: 'none'}}>← Назад</Link>
+          <h1 className="section-title" style={{marginTop: '10px'}}>{image.name}</h1>
+        </div>
       </div>
 
-      <div style={{overflow:'auto', border:'1px solid #ccc', maxWidth:'100%', maxHeight:'80vh'}}>
-        <div className="image-wrapper" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}
-          style={{position:'relative', display:'inline-block', transformOrigin:'top left', transform:`scale(${zoom})`, cursor:drawing?'crosshair':'default', userSelect:'none'}}>
-          <img ref={imgRef} src={image.url} alt={image.name} draggable={false} style={{display:'block', maxWidth:'100%'}} />
+      <div className="zoom-controls">
+        <button className="button" onClick={() => setZoom(z => Math.max(0.1, z - 0.1))}>−</button>
+        <span>{Math.round(zoom * 100)}%</span>
+        <button className="button" onClick={() => setZoom(z => Math.min(5, z + 0.1))}>+</button>
+        <button className="button button-outline" onClick={() => setZoom(1)}>Сброс</button>
+      </div>
+
+      <div style={{overflow:'auto', border:'1px solid var(--border)', borderRadius:'8px', maxWidth:'100%'}}>
+        <div 
+          className="image-wrapper" 
+          onMouseDown={handleMouseDown} 
+          onMouseMove={handleMouseMove} 
+          onMouseUp={handleMouseUp}
+          style={{
+            position:'relative', 
+            display:'inline-block', 
+            transformOrigin:'top left', 
+            transform:`scale(${zoom})`, 
+            cursor:drawing?'crosshair':'default', 
+            userSelect:'none'
+          }}
+        >
+          <img 
+            ref={imgRef} 
+            src={image.url} 
+            alt={image.name} 
+            draggable={false} 
+            style={{display:'block', maxWidth:'100%'}} 
+          />
 
           {annotations.map(a => {
             const px = pixelCoordsMap[a.id] || {x:0,y:0,w:0,h:0}
             return (
-              <div key={a.id} onMouseEnter={() => setHovered(a.id)} onMouseLeave={() => setHovered(null)} onDoubleClick={e => editAnnotation(a, e)}
-                style={{position:'absolute', left:`${a.x}%`, top:`${a.y}%`, width:`${a.width}%`, height:`${a.height}%`,
-                  border:hovered===a.id?'2px solid red':'2px solid #00ff00', background:hovered===a.id?'rgba(255,0,0,0.1)':'rgba(0,255,0,0.05)',
-                  boxSizing:'border-box', pointerEvents:'auto'}}>
-                <div style={{position:'absolute', top:0, left:0, background:'rgba(0,0,0,0.6)', color:'#fff', padding:'2px 5px', fontSize:'12px', lineHeight:'1', pointerEvents:'none', userSelect:'none'}}>
-                  {a.class_name}
-                </div>
+              <div 
+                key={a.id} 
+                className="annotation-box"
+                onMouseEnter={() => setHovered(a.id)} 
+                onMouseLeave={() => setHovered(null)} 
+                onDoubleClick={e => editAnnotation(a, e)}
+                style={{
+                  position:'absolute', 
+                  left:`${a.x}%`, 
+                  top:`${a.y}%`, 
+                  width:`${a.width}%`, 
+                  height:`${a.height}%`
+                }}
+              >
+                <div className="annotation-label">{a.class_name}</div>
+                
                 {hovered === a.id && (
-                  <div style={{position:'absolute', bottom:'100%', left:0, background:'#fff', color:'#000', padding:'8px 10px', border:'1px solid #ccc', borderRadius:'4px', fontSize:'12px', whiteSpace:'pre', zIndex:100, boxShadow:'0 4px 12px rgba(0,0,0,0.25)', pointerEvents:'auto', minWidth:140}}>
+                  <div className="tooltip">
                     <div><b>Класс:</b> {a.class_name}</div>
                     <div>X: {px.x}px | Y: {px.y}px</div>
                     <div>W: {px.w}px | H: {px.h}px</div>
-                    <button className="button button-danger" style={{marginTop:6, fontSize:'11px', padding:'2px 8px', cursor:'pointer'}} onClick={e => deleteAnnotation(a.id, e)}>Удалить</button>
+                    <button className="button button-danger" style={{marginTop:'8px', fontSize:'0.8rem', padding:'4px 8px', width:'100%'}} onClick={e => deleteAnnotation(a.id, e)}>
+                      Удалить
+                    </button>
                   </div>
                 )}
               </div>
@@ -143,7 +177,19 @@ export default function ImagePage() {
           })}
 
           {currentBox && (
-            <div style={{position:'absolute', left:`${currentBox.x}%`, top:`${currentBox.y}%`, width:`${currentBox.width}%`, height:`${currentBox.height}%`, border:'2px dashed #0066ff', background:'rgba(0,102,255,0.15)', pointerEvents:'none', boxSizing:'border-box'}} />
+            <div 
+              style={{
+                position:'absolute', 
+                left:`${currentBox.x}%`, 
+                top:`${currentBox.y}%`, 
+                width:`${currentBox.width}%`, 
+                height:`${currentBox.height}%`, 
+                border:'2px dashed var(--gold)', 
+                background:'rgba(212, 175, 55, 0.15)', 
+                pointerEvents:'none', 
+                boxSizing:'border-box'
+              }} 
+            />
           )}
         </div>
       </div>
