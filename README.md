@@ -17,6 +17,7 @@ docker compose up --build
 # 3. Откройте в браузере:
 # Фронтенд: http://localhost:3000
 # Swagger UI (документация API): http://localhost:8000/docs
+```
 
 ## Использованные технологии:
 ### Фронтенд
